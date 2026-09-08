@@ -1,0 +1,192 @@
+:root {
+  --sea: #0e2a47;
+  --sea-light: #14406b;
+  --grid-line: #1f5c94;
+  --ship: #7f8c9b;
+  --hit: #e2564b;
+  --miss: #cfd8e3;
+  --sunk: #8c2f28;
+  --text: #eaf2fb;
+  --accent: #4bb3e2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background-color: #071a2c;
+  background-image: radial-gradient(circle at top, #123a5e, #071a2c);
+  color: var(--text);
+}
+
+h1 {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.status {
+  margin: 0.35rem 0 1rem;
+  font-size: 1.05rem;
+  color: var(--accent);
+  min-height: 1.4em;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 900px;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.ship-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+
+.ship-list button {
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--grid-line);
+  background: var(--sea-light);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.ship-list button[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(75, 179, 226, 0.35);
+}
+
+.ship-list button[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controls button,
+.controls select {
+  font: inherit;
+  padding: 0.45rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--grid-line);
+  background: var(--sea-light);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.controls button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.boards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(10, 32px);
+  grid-template-rows: repeat(10, 32px);
+  gap: 2px;
+  background: var(--grid-line);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.cell {
+  background: var(--sea);
+  border: none;
+  padding: 0;
+  border-radius: 3px;
+  cursor: default;
+}
+
+.board--enemy .cell:not(.cell--hit):not(.cell--miss) {
+  cursor: crosshair;
+}
+
+.board--enemy .cell:not(.cell--hit):not(.cell--miss):hover {
+  background: var(--sea-light);
+}
+
+.cell--ship {
+  background: var(--ship);
+}
+
+.cell--preview {
+  background: var(--accent);
+}
+
+.cell--invalid {
+  background: var(--sunk);
+}
+
+.cell--miss {
+  background: var(--miss);
+}
+
+.cell--hit {
+  background: var(--hit);
+}
+
+.cell--sunk {
+  background: var(--sunk);
+}
+
+.fleet-status {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+.log {
+  margin: 0.75rem 0 0;
+  padding-left: 1.2rem;
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}

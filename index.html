@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Battleship</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Battleship</h1>
+      <p id="status" class="status">Place your fleet to begin.</p>
+    </header>
+
+    <main>
+      <section class="panel" id="setup-panel">
+        <h2>Deploy your fleet</h2>
+        <p class="hint">
+          Click a cell on your waters to place the selected ship. Press <kbd>R</kbd> or the rotate
+          button to change orientation.
+        </p>
+        <ul id="ship-list" class="ship-list"></ul>
+        <div class="controls">
+          <button id="rotate-btn" type="button">Rotate: Horizontal</button>
+          <button id="random-btn" type="button">Random placement</button>
+          <button id="start-btn" type="button" disabled>Start battle</button>
+        </div>
+      </section>
+
+      <section class="boards">
+        <div class="board-wrap">
+          <h2>Your waters</h2>
+          <div id="player-board" class="board" aria-label="Your board"></div>
+          <p class="fleet-status" id="player-fleet"></p>
+        </div>
+        <div class="board-wrap">
+          <h2>Enemy waters</h2>
+          <div id="enemy-board" class="board board--enemy" aria-label="Enemy board"></div>
+          <p class="fleet-status" id="enemy-fleet"></p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="controls">
+          <label for="difficulty">AI difficulty</label>
+          <select id="difficulty">
+            <option value="easy">Easy — random fire</option>
+            <option value="medium">Medium — hunt &amp; target</option>
+            <option value="hard" selected>Hard — probability search</option>
+          </select>
+          <button id="restart-btn" type="button">New game</button>
+        </div>
+        <ol id="log" class="log" aria-live="polite"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
