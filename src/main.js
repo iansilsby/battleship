@@ -44,6 +44,7 @@
     playerShots: 0,
     enemyShots: 0,
     aiTimer: null,
+    hovered: null,
   };
 
   function buildGrid(container, onClick, onHover, onLeave) {
@@ -85,6 +86,7 @@
   }
 
   function fleetSummary(board) {
+    if (board.ships.length === 0) return 'No ships placed yet';
     const alive = remainingShips(board);
     if (alive.length === 0) return 'Fleet destroyed';
     return alive.map((ship) => `${ship.name} (${ship.size - ship.hits}/${ship.size})`).join(' · ');
@@ -136,6 +138,7 @@
 
   function previewPlacement(row, col) {
     if (state.phase !== 'setup') return;
+    state.hovered = { row, col };
     const index = state.selectedShip;
     if (index < 0 || state.placed.includes(index)) return;
     const { size } = SHIPS[index];
@@ -150,7 +153,14 @@
 
   function clearPreview() {
     if (state.phase !== 'setup') return;
+    state.hovered = null;
     renderBoard(playerBoardEl, state.player, true);
+  }
+
+  function repaintPreview() {
+    if (state.phase !== 'setup' || !state.hovered) return;
+    renderBoard(playerBoardEl, state.player, true);
+    previewPlacement(state.hovered.row, state.hovered.col);
   }
 
   function handlePlacement(row, col) {
@@ -255,6 +265,7 @@
     state.busy = false;
     state.playerShots = 0;
     state.enemyShots = 0;
+    state.hovered = null;
     logEl.replaceChildren();
     rotateBtn.textContent = 'Rotate: Horizontal';
     setStatus('Place your fleet to begin.');
@@ -264,6 +275,7 @@
   function toggleRotation() {
     state.horizontal = !state.horizontal;
     rotateBtn.textContent = `Rotate: ${state.horizontal ? 'Horizontal' : 'Vertical'}`;
+    repaintPreview();
   }
 
   buildGrid(playerBoardEl, handlePlacement, previewPlacement, clearPreview);

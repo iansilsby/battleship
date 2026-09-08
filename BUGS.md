@@ -40,3 +40,45 @@ Bugs found while building and play-testing the game, in the order they were foun
 - **Root cause:** the `keydown` handler was registered unconditionally and did not check the phase.
 - **Fix:** the handler now ignores `R` unless `state.phase === 'setup'`; `Randomize` is likewise
   guarded so it cannot rebuild the player's board once the battle has started.
+
+The rest were found while play-testing two full games in the browser (one from `file://`, one served
+over HTTP).
+
+## 5. New Game during the AI's delay let a stale enemy shot land on the fresh board
+
+- **Symptom:** firing a shot and then clicking **New Game** within the AI's 550 ms thinking delay
+  (measured at 327 ms) produced a brand-new setup screen that already showed "Enemy shots fired: 1",
+  a miss marker on the player's empty board, a log line, and the status "Your turn — fire at enemy
+  waters." while the player had no fleet placed.
+- **Root cause:** `playerTurn()` scheduled `aiTurn` with `setTimeout` and nothing cancelled it;
+  `newGame()` replaced the boards, then the pending callback fired against the new state.
+- **Fix:** the timer handle is kept in `state.aiTimer`, `newGame()` clears it, and `aiTurn()` returns
+  immediately unless `state.phase === 'battle'` (belt and braces for any other pending callback).
+
+## 6. Pressing `R` did not repaint an existing hover preview
+
+- **Symptom:** while hovering a cell during placement, pressing `R` (or clicking Rotate) flipped the
+  button label but the highlighted preview kept the old orientation until the pointer left the cell
+  and came back.
+- **Root cause:** the preview was painted only from `mouseenter`, so rotating never triggered a
+  repaint of the cell already under the cursor.
+- **Fix:** the hovered cell is tracked in `state.hovered`, and `toggleRotation()` repaints the
+  preview for it.
+
+## 7. Boards jumped around as ships were sunk
+
+- **Symptom:** the two boards started stacked vertically and snapped side by side (shifting the
+  enemy board horizontally) partway through a game.
+- **Root cause:** each board column was sized by its content, and the fleet-status line under the
+  board shrinks as ships sink, so the flex row's total width changed and it stopped wrapping.
+- **Fix:** `.board-wrap` has a fixed width matching the grid and `.fleet-status` reserves enough
+  height for the longest summary, so the layout no longer depends on how many ships are afloat.
+
+## 8. A fleet that had not been placed yet reported "Fleet destroyed"
+
+- **Symptom:** on a fresh game, before placing any ship, the player's fleet status read "Fleet
+  destroyed".
+- **Root cause:** `fleetSummary()` printed that message whenever no ship was still afloat, which is
+  vacuously true for an empty board (`isFleetDestroyed()` guards against this, but the summary did
+  not).
+- **Fix:** an empty board now reads "No ships placed yet".

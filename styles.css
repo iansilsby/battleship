@@ -120,6 +120,11 @@ main {
   gap: 1.5rem;
 }
 
+.board-wrap {
+  flex: 0 0 auto;
+  width: 342px;
+}
+
 .board {
   display: grid;
   grid-template-columns: repeat(10, 32px);
@@ -173,7 +178,7 @@ main {
 .fleet-status {
   margin: 0.6rem 0 0;
   font-size: 0.85rem;
-  min-height: 1.2em;
+  min-height: 3.4em;
 }
 
 .counter {
