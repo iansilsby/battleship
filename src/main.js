@@ -43,6 +43,7 @@
     busy: false,
     playerShots: 0,
     enemyShots: 0,
+    aiTimer: null,
   };
 
   function buildGrid(container, onClick, onHover, onLeave) {
@@ -188,10 +189,12 @@
 
     state.busy = true;
     setStatus('Enemy is taking aim…');
-    setTimeout(aiTurn, 550);
+    state.aiTimer = setTimeout(aiTurn, 550);
   }
 
   function aiTurn() {
+    state.aiTimer = null;
+    if (state.phase !== 'battle') return;
     const { row, col } = state.opponent.nextShot(state.player.shots);
     const result = fireAt(state.player, row, col);
     state.opponent.recordResult(row, col, result);
@@ -238,6 +241,10 @@
   }
 
   function newGame() {
+    if (state.aiTimer !== null) {
+      clearTimeout(state.aiTimer);
+      state.aiTimer = null;
+    }
     state.phase = 'setup';
     state.horizontal = true;
     state.selectedShip = 0;
