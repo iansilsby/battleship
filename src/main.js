@@ -1,10 +1,9 @@
-/* DOM rendering and turn flow. All game rules live in game.js / ai.js. */
-(function (game, ai) {
+/* DOM rendering, screens and turn flow. All game rules live in game.js / ai.js / factions.js. */
+(function (game, ai, factions) {
   const {
     BOARD_SIZE,
     HIT,
     MISS,
-    SHIPS,
     alreadyShot,
     canPlace,
     cellLabel,
@@ -16,36 +15,92 @@
     remainingShips,
     shipCells,
   } = game;
+  const { FACTIONS, opposing, unitFor } = factions;
 
-  const statusEl = document.getElementById('status');
-  const playerBoardEl = document.getElementById('player-board');
-  const enemyBoardEl = document.getElementById('enemy-board');
-  const playerFleetEl = document.getElementById('player-fleet');
-  const enemyFleetEl = document.getElementById('enemy-fleet');
-  const shipListEl = document.getElementById('ship-list');
-  const rotateBtn = document.getElementById('rotate-btn');
-  const randomBtn = document.getElementById('random-btn');
-  const startBtn = document.getElementById('start-btn');
-  const restartBtn = document.getElementById('restart-btn');
-  const logEl = document.getElementById('log');
-  const setupPanel = document.getElementById('setup-panel');
-  const playerShotsEl = document.getElementById('player-shots');
-  const enemyShotsEl = document.getElementById('enemy-shots');
+  const CELL = 32;
+  const GAP = 2;
+  const AI_DELAY = 650;
+
+  const $ = (id) => document.getElementById(id);
+  const screens = {
+    splash: $('screen-splash'),
+    faction: $('screen-faction'),
+    setup: $('screen-setup'),
+    battle: $('screen-battle'),
+  };
+  const statusEl = $('status');
+  const turnEl = $('turn');
+  const setupBoardEl = $('player-board');
+  const playerBoardEl = $('player-board-battle');
+  const enemyBoardEl = $('enemy-board');
+  const shipListEl = $('ship-list');
+  const howtoUnitsEl = $('howto-units');
+  const rotateBtn = $('rotate-btn');
+  const randomBtn = $('random-btn');
+  const clearBtn = $('clear-btn');
+  const startBtn = $('start-btn');
+  const backBtn = $('back-btn');
+  const switchBtn = $('switch-btn');
+  const restartBtn = $('restart-btn');
+  const enterBtn = $('enter-btn');
+  const logEl = $('log');
+  const difficultyChips = Array.from(document.querySelectorAll('[data-difficulty]'));
 
   const state = {
+    screen: 'splash',
     phase: 'setup',
+    faction: FACTIONS.autobots,
+    enemyFaction: FACTIONS.decepticons,
+    difficulty: 'hard',
     horizontal: true,
     selectedShip: 0,
     placed: [],
     player: createBoard(),
     enemy: createBoard(),
-    opponent: ai.createAI(),
+    opponent: null,
     busy: false,
-    playerShots: 0,
-    enemyShots: 0,
+    stats: { player: { shots: 0, hits: 0, sunk: 0 }, enemy: { shots: 0, hits: 0, sunk: 0 } },
     aiTimer: null,
     hovered: null,
   };
+
+  /* ---------- screens ---------- */
+
+  function showScreen(name) {
+    state.screen = name;
+    Object.entries(screens).forEach(([id, el]) => {
+      el.hidden = id !== name;
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function setFaction(id) {
+    state.faction = FACTIONS[id];
+    state.enemyFaction = opposing(id);
+    document.body.className = `faction-${id}`;
+    const you = state.faction;
+    const foe = state.enemyFaction;
+    $('setup-title').textContent = you.name;
+    $('rack-title').textContent = you.fleetLabel;
+    $('setup-board-title').textContent = `${singular(you)} territory`;
+    $('player-board-title').textContent = `${singular(you)} territory`;
+    $('enemy-board-title').textContent = `${singular(foe)} territory`;
+    $('player-score-title').textContent = you.name;
+    $('enemy-score-title').textContent = foe.name;
+    howtoUnitsEl.replaceChildren(
+      ...you.fleet.map((unit) => {
+        const li = document.createElement('li');
+        li.textContent = `${unit.name} — ${unit.vehicle} (${unit.size} cells)`;
+        return li;
+      }),
+    );
+  }
+
+  function singular(faction) {
+    return faction.name.replace(/s$/, '');
+  }
+
+  /* ---------- grid rendering ---------- */
 
   function buildGrid(container, onClick, onHover, onLeave) {
     container.replaceChildren();
@@ -63,44 +118,82 @@
         container.appendChild(cell);
       }
     }
+    const overlays = document.createElement('div');
+    overlays.className = 'overlays';
+    container.appendChild(overlays);
   }
 
   function cellAt(container, row, col) {
     return container.children[row * BOARD_SIZE + col];
   }
 
-  function renderBoard(container, board, revealShips) {
+  function vehicleOverlay(ship, faction) {
+    const unit = unitFor(faction, ship.name);
+    const first = ship.cells[0];
+    const length = ship.size * (CELL + GAP) - GAP;
+    const wrap = document.createElement('div');
+    wrap.className = `vehicle${ship.horizontal ? '' : ' vehicle--vertical'}${
+      ship.hits === ship.size ? ' vehicle--destroyed' : ''
+    }`;
+    wrap.style.left = `${GAP + first.col * (CELL + GAP)}px`;
+    wrap.style.top = `${GAP + first.row * (CELL + GAP)}px`;
+    wrap.style.width = `${ship.horizontal ? length : CELL}px`;
+    wrap.style.height = `${ship.horizontal ? CELL : length}px`;
+    const img = document.createElement('img');
+    img.src = unit ? unit.image : '';
+    img.alt = `${ship.name} (${unit ? unit.vehicle : ship.size + ' cells'})`;
+    img.width = length;
+    img.height = CELL;
+    wrap.appendChild(img);
+    return wrap;
+  }
+
+  /** revealMode: 'all' (own board), 'sunk' (enemy during battle) or 'none'. */
+  function renderBoard(container, board, faction, revealMode) {
     for (let row = 0; row < BOARD_SIZE; row += 1) {
       for (let col = 0; col < BOARD_SIZE; col += 1) {
         const el = cellAt(container, row, col);
         const ship = board.grid[row][col];
         const shot = board.shots[row][col];
         el.className = 'cell';
-        if (revealShips && ship) el.classList.add('cell--ship');
         if (shot === MISS) el.classList.add('cell--miss');
         if (shot === HIT) {
           el.classList.add(ship && ship.hits === ship.size ? 'cell--sunk' : 'cell--hit');
         }
       }
     }
+    const overlays = container.querySelector('.overlays');
+    overlays.replaceChildren(
+      ...board.ships
+        .filter((ship) => revealMode === 'all' || (revealMode === 'sunk' && ship.hits === ship.size))
+        .map((ship) => vehicleOverlay(ship, faction)),
+    );
   }
 
-  function fleetSummary(board) {
-    if (board.ships.length === 0) return 'No cars in the garage yet';
+  function fleetSummary(board, faction) {
+    if (board.ships.length === 0) return 'No units deployed';
     const alive = remainingShips(board);
-    if (alive.length === 0) return 'Garage wiped out';
+    if (alive.length === 0) return `${faction.name} eliminated`;
     return alive.map((ship) => `${ship.name} (${ship.size - ship.hits}/${ship.size})`).join(' · ');
   }
 
   function renderShipList() {
     shipListEl.replaceChildren();
-    SHIPS.forEach((ship, index) => {
+    state.faction.fleet.forEach((unit, index) => {
       const item = document.createElement('li');
       const button = document.createElement('button');
       button.type = 'button';
-      button.textContent = `${ship.name} (${ship.size})`;
+      button.className = 'rack-unit';
       button.disabled = state.placed.includes(index);
       button.setAttribute('aria-pressed', String(state.selectedShip === index));
+      const img = document.createElement('img');
+      img.src = unit.image;
+      img.alt = '';
+      img.width = unit.size * 20;
+      img.height = 20;
+      const label = document.createElement('span');
+      label.innerHTML = `<strong>${unit.name}</strong><small>${unit.vehicle} · ${unit.size}</small>`;
+      button.append(img, label);
       button.addEventListener('click', () => {
         state.selectedShip = index;
         render();
@@ -110,21 +203,38 @@
     });
   }
 
-  function render() {
-    renderBoard(playerBoardEl, state.player, true);
-    renderBoard(enemyBoardEl, state.enemy, state.phase === 'over');
-    playerFleetEl.textContent = fleetSummary(state.player);
-    enemyFleetEl.textContent = state.phase === 'setup' ? '' : fleetSummary(state.enemy);
-    playerShotsEl.textContent = String(state.playerShots);
-    enemyShotsEl.textContent = String(state.enemyShots);
-    renderShipList();
-    startBtn.disabled = state.placed.length !== SHIPS.length;
-    setupPanel.hidden = state.phase !== 'setup';
+  function renderStats() {
+    ['player', 'enemy'].forEach((side) => {
+      $(`${side}-shots`).textContent = String(state.stats[side].shots);
+      $(`${side}-hits`).textContent = String(state.stats[side].hits);
+      $(`${side}-sunk`).textContent = String(state.stats[side].sunk);
+    });
+    $('difficulty-display').textContent = capitalize(state.difficulty);
+    difficultyChips.forEach((chip) => {
+      chip.setAttribute('aria-pressed', String(chip.dataset.difficulty === state.difficulty));
+    });
   }
 
-  function log(message) {
+  function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function render() {
+    renderBoard(setupBoardEl, state.player, state.faction, 'all');
+    renderBoard(playerBoardEl, state.player, state.faction, 'all');
+    renderBoard(enemyBoardEl, state.enemy, state.enemyFaction, state.phase === 'over' ? 'all' : 'sunk');
+    $('player-fleet').textContent = fleetSummary(state.player, state.faction);
+    $('enemy-fleet').textContent = fleetSummary(state.enemy, state.enemyFaction);
+    renderShipList();
+    renderStats();
+    startBtn.disabled = state.placed.length !== state.faction.fleet.length;
+    rotateBtn.textContent = state.horizontal ? '↔ Horizontal' : '↕ Vertical';
+  }
+
+  function log(message, kind) {
     const item = document.createElement('li');
     item.textContent = message;
+    if (kind) item.className = `log--${kind}`;
     logEl.prepend(item);
   }
 
@@ -132,8 +242,14 @@
     statusEl.textContent = message;
   }
 
+  function setTurn(message) {
+    turnEl.textContent = message;
+  }
+
+  /* ---------- placement ---------- */
+
   function nextUnplacedShip() {
-    return SHIPS.findIndex((_, index) => !state.placed.includes(index));
+    return state.faction.fleet.findIndex((_, index) => !state.placed.includes(index));
   }
 
   function previewPlacement(row, col) {
@@ -141,25 +257,23 @@
     state.hovered = { row, col };
     const index = state.selectedShip;
     if (index < 0 || state.placed.includes(index)) return;
-    const { size } = SHIPS[index];
+    const { size } = state.faction.fleet[index];
     const valid = canPlace(state.player, row, col, size, state.horizontal);
     shipCells(row, col, size, state.horizontal).forEach((cell) => {
       if (cell.row >= BOARD_SIZE || cell.col >= BOARD_SIZE) return;
-      cellAt(playerBoardEl, cell.row, cell.col).classList.add(
-        valid ? 'cell--preview' : 'cell--invalid',
-      );
+      cellAt(setupBoardEl, cell.row, cell.col).classList.add(valid ? 'cell--preview' : 'cell--invalid');
     });
   }
 
   function clearPreview() {
     if (state.phase !== 'setup') return;
     state.hovered = null;
-    renderBoard(playerBoardEl, state.player, true);
+    renderBoard(setupBoardEl, state.player, state.faction, 'all');
   }
 
   function repaintPreview() {
     if (state.phase !== 'setup' || !state.hovered) return;
-    renderBoard(playerBoardEl, state.player, true);
+    renderBoard(setupBoardEl, state.player, state.faction, 'all');
     previewPlacement(state.hovered.row, state.hovered.col);
   }
 
@@ -167,39 +281,87 @@
     if (state.phase !== 'setup') return;
     const index = state.selectedShip;
     if (index < 0 || state.placed.includes(index)) return;
-    const ship = SHIPS[index];
-    if (!placeShip(state.player, ship.name, row, col, ship.size, state.horizontal)) {
-      setStatus(`${ship.name} does not fit there.`);
+    const unit = state.faction.fleet[index];
+    if (!placeShip(state.player, unit.name, row, col, unit.size, state.horizontal)) {
+      setStatus(`${unit.name} does not fit there.`);
       return;
     }
     state.placed.push(index);
     const next = nextUnplacedShip();
     state.selectedShip = next;
-    setStatus(next === -1 ? 'Garage full. Start the race!' : `Park your ${SHIPS[next].name}.`);
+    setStatus(
+      next === -1 ? `All units deployed. ${state.faction.rally}` : `Deploy ${state.faction.fleet[next].name}.`,
+    );
+    render();
+  }
+
+  function randomPlacement() {
+    if (state.phase !== 'setup') return;
+    state.player = createBoard();
+    placeFleetRandomly(state.player, state.faction.fleet);
+    state.placed = state.faction.fleet.map((_, index) => index);
+    state.selectedShip = -1;
+    setStatus(`All units deployed. ${state.faction.rally}`);
+    render();
+  }
+
+  function clearPlacement() {
+    if (state.phase !== 'setup') return;
+    state.player = createBoard();
+    state.placed = [];
+    state.selectedShip = 0;
+    setStatus('Position your units, Commander.');
+    render();
+  }
+
+  function toggleRotation() {
+    state.horizontal = !state.horizontal;
+    rotateBtn.textContent = state.horizontal ? '↔ Horizontal' : '↕ Vertical';
+    repaintPreview();
+  }
+
+  /* ---------- battle ---------- */
+
+  function startBattle() {
+    if (state.placed.length !== state.faction.fleet.length) return;
+    state.phase = 'battle';
+    state.opponent = ai.createAI({ difficulty: state.difficulty, fleet: state.enemyFaction.fleet });
+    state.enemy = createBoard();
+    placeFleetRandomly(state.enemy, state.enemyFaction.fleet);
+    logEl.replaceChildren();
+    log(`The forces are assembled. ${state.faction.name} strike first!`);
+    setTurn(`Your turn — fire on ${singular(state.enemyFaction)} territory`);
+    showScreen('battle');
     render();
   }
 
   function playerTurn(row, col) {
     if (state.phase !== 'battle' || state.busy) return;
     if (alreadyShot(state.enemy, row, col)) {
-      setStatus('You already crashed into that spot — pick another cell.');
+      setTurn('You already fired there — pick another cell.');
       return;
     }
     const result = fireAt(state.enemy, row, col);
-    state.playerShots += 1;
     const label = cellLabel(row, col);
-    if (result.sunk) log(`You wrecked the rival ${result.sunk.name} at ${label}!`);
-    else log(`You launched at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
+    const me = state.stats.player;
+    me.shots += 1;
+    if (result.hit) me.hits += 1;
+    if (result.sunk) {
+      me.sunk += 1;
+      log(`${result.sunk.name} destroyed! ${state.faction.name} take down the ${state.enemyFaction.name}' ${unitFor(state.enemyFaction, result.sunk.name).vehicle} at ${label}.`, 'sunk');
+    } else {
+      log(`${state.faction.name} fire at ${label}: ${result.hit ? 'HIT' : 'miss'}.`, result.hit ? 'hit' : 'miss');
+    }
     render();
 
     if (isFleetDestroyed(state.enemy)) {
-      endGame(`Checkered flag! Rival garage wrecked in ${state.playerShots} launches.`);
+      endGame(`Victory! The ${state.enemyFaction.name} are defeated in ${me.shots} shots. ${state.faction.rally}`);
       return;
     }
 
     state.busy = true;
-    setStatus('Rival is revving up…');
-    state.aiTimer = setTimeout(aiTurn, 550);
+    setTurn(`${state.enemyFaction.name}' turn…`);
+    state.aiTimer = setTimeout(aiTurn, AI_DELAY);
   }
 
   function aiTurn() {
@@ -208,49 +370,37 @@
     const { row, col } = state.opponent.nextShot(state.player.shots);
     const result = fireAt(state.player, row, col);
     state.opponent.recordResult(row, col, result);
-    state.enemyShots += 1;
     const label = cellLabel(row, col);
-    if (result.sunk) log(`Rival wrecked your ${result.sunk.name} at ${label}!`);
-    else log(`Rival launched at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
+    const foe = state.stats.enemy;
+    foe.shots += 1;
+    if (result.hit) foe.hits += 1;
+    if (result.sunk) {
+      foe.sunk += 1;
+      log(`${result.sunk.name} destroyed! The ${state.enemyFaction.name} take out your ${unitFor(state.faction, result.sunk.name).vehicle} at ${label}.`, 'sunk');
+    } else {
+      log(`${state.enemyFaction.name} fire at ${label}: ${result.hit ? 'HIT' : 'miss'}.`, result.hit ? 'hit' : 'miss');
+    }
     render();
 
     if (isFleetDestroyed(state.player)) {
-      endGame(`Wipeout — your garage was wrecked in ${state.enemyShots} rival launches.`);
+      endGame(`Defeat — the ${state.enemyFaction.name} crushed your forces in ${foe.shots} shots.`);
       return;
     }
     state.busy = false;
-    setStatus('Your turn — launch at the rival track.');
+    setTurn(`Your turn — fire on ${singular(state.enemyFaction)} territory`);
   }
 
   function endGame(message) {
     state.phase = 'over';
     state.busy = false;
-    setStatus(message);
-    log(message);
+    setTurn(message);
+    log(message, 'end');
     render();
   }
 
-  function startBattle() {
-    if (state.placed.length !== SHIPS.length) return;
-    state.phase = 'battle';
-    state.opponent = ai.createAI();
-    placeFleetRandomly(state.enemy);
-    setStatus('Your turn — launch at the rival track.');
-    log('Green light — race on!');
-    render();
-  }
+  /* ---------- resets ---------- */
 
-  function randomPlacement() {
-    if (state.phase !== 'setup') return;
-    state.player = createBoard();
-    placeFleetRandomly(state.player);
-    state.placed = SHIPS.map((_, index) => index);
-    state.selectedShip = -1;
-    setStatus('Garage full. Start the race!');
-    render();
-  }
-
-  function newGame() {
+  function resetBoards() {
     if (state.aiTimer !== null) {
       clearTimeout(state.aiTimer);
       state.aiTimer = null;
@@ -261,33 +411,56 @@
     state.placed = [];
     state.player = createBoard();
     state.enemy = createBoard();
-    state.opponent = ai.createAI();
+    state.opponent = null;
     state.busy = false;
-    state.playerShots = 0;
-    state.enemyShots = 0;
+    state.stats = { player: { shots: 0, hits: 0, sunk: 0 }, enemy: { shots: 0, hits: 0, sunk: 0 } };
     state.hovered = null;
     logEl.replaceChildren();
-    rotateBtn.textContent = 'Rotate: Horizontal';
-    setStatus('Park your cars to begin.');
+    setStatus('Position your units, Commander.');
     render();
   }
 
-  function toggleRotation() {
-    state.horizontal = !state.horizontal;
-    rotateBtn.textContent = `Rotate: ${state.horizontal ? 'Horizontal' : 'Vertical'}`;
-    repaintPreview();
+  function newBattle() {
+    resetBoards();
+    showScreen('setup');
   }
 
-  buildGrid(playerBoardEl, handlePlacement, previewPlacement, clearPreview);
+  function chooseSide() {
+    resetBoards();
+    showScreen('faction');
+  }
+
+  /* ---------- wiring ---------- */
+
+  buildGrid(setupBoardEl, handlePlacement, previewPlacement, clearPreview);
+  buildGrid(playerBoardEl);
   buildGrid(enemyBoardEl, playerTurn);
 
+  enterBtn.addEventListener('click', () => showScreen('faction'));
+  document.querySelectorAll('[data-faction]').forEach((card) => {
+    card.addEventListener('click', () => {
+      setFaction(card.dataset.faction);
+      newBattle();
+    });
+  });
+  difficultyChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      state.difficulty = chip.dataset.difficulty;
+      renderStats();
+    });
+  });
   rotateBtn.addEventListener('click', toggleRotation);
   randomBtn.addEventListener('click', randomPlacement);
+  clearBtn.addEventListener('click', clearPlacement);
   startBtn.addEventListener('click', startBattle);
-  restartBtn.addEventListener('click', newGame);
+  backBtn.addEventListener('click', chooseSide);
+  switchBtn.addEventListener('click', chooseSide);
+  restartBtn.addEventListener('click', newBattle);
   document.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'r' && state.phase === 'setup') toggleRotation();
+    if (event.key.toLowerCase() === 'r' && state.screen === 'setup') toggleRotation();
   });
 
-  newGame();
-})(window.BattleshipGame, window.BattleshipAI);
+  setFaction('autobots');
+  resetBoards();
+  showScreen('splash');
+})(window.BattleshipGame, window.BattleshipAI, window.BattleshipFactions);

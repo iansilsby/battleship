@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32" width="96" height="32">
+  <!-- Ratchet: yellow-green rescue truck -->
+  <path d="M4 22V8h56l10 6h18v8z" fill="#bfd730"/>
+  <rect x="8" y="10" width="44" height="6" fill="#e8f3a3" opacity=".7"/>
+  <path d="M62 10l6 4h-10v-4z" fill="#8fd3ff"/>
+  <rect x="24" y="4" width="14" height="4" fill="#c8102e"/>
+  <rect x="26" y="2" width="10" height="2" fill="#ff5c5c"/>
+  <rect x="28" y="12" width="8" height="8" fill="#c8102e"/>
+  <rect x="31" y="12" width="2" height="8" fill="#fff"/><rect x="28" y="15" width="8" height="2" fill="#fff"/>
+  <rect x="86" y="15" width="6" height="4" fill="#1c1f26"/>
+  <g fill="#1b1e24" stroke="#8f97a3" stroke-width="2">
+    <circle cx="20" cy="24" r="5"/><circle cx="74" cy="24" r="5"/>
+  </g>
+</svg>

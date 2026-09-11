@@ -97,3 +97,25 @@ over HTTP).
 - **Root cause:** `randomPlacement()` had its own copy of the ready message that was missed during
   the reskin.
 - **Fix:** it now shares the same "Garage full. Start the race!" wording as manual placement.
+
+## 11. Vehicle overlay layer stole a grid cell (Transformers rewrite)
+
+- **Symptom:** with the `.overlays` `<div>` appended after the 100 cell buttons, the board's CSS
+  grid treated it as a 101st item and pushed an extra row onto the board.
+- **Root cause:** every child of a grid container is a grid item unless it is absolutely positioned.
+- **Fix:** `.overlays` is `position: absolute; inset: 0` inside the relatively positioned board, so
+  it sits over the cells without occupying a track; shot markers are `z-index: 2`, vehicles `1`.
+
+## 12. Miss markers erased the cell behind them
+
+- **Symptom:** a missed shot turned the cell into a hole showing the board's grid-line colour
+  instead of a grey dot on the cell.
+- **Root cause:** the miss rule copied the hit rule's `background: transparent !important`, which is
+  only needed on hits so the vehicle image underneath stays visible.
+- **Fix:** misses keep the normal cell background; only hit/destroyed cells are transparent.
+
+## 13. Random / Clear buttons rendered emoji as boxes
+
+- **Symptom:** the dice and bin glyphs showed as tofu boxes on systems without an emoji font.
+- **Root cause:** decorative emoji in button labels with no fallback.
+- **Fix:** plain text labels.

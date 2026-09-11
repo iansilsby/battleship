@@ -8,11 +8,11 @@
   const BOARD_SIZE = 10;
 
   const SHIPS = [
-    { name: 'Car Hauler', size: 5 },
-    { name: 'Monster Truck', size: 4 },
-    { name: 'Muscle Car', size: 3 },
-    { name: 'Dragster', size: 3 },
-    { name: 'Go-Kart', size: 2 },
+    { name: 'Carrier', size: 5 },
+    { name: 'Battleship', size: 4 },
+    { name: 'Cruiser', size: 3 },
+    { name: 'Submarine', size: 3 },
+    { name: 'Destroyer', size: 2 },
   ];
 
   const EMPTY = 0;
