@@ -1,6 +1,9 @@
 # Bug log
 
-Bugs found while building and play-testing the game, in the order they were found.
+This document records every bug found in the Battleship game while it was being built, along with
+its symptom, root cause and fix. Bugs surfaced through Devin's own test games in the browser, the
+Node unit tests in `test/game.test.js`, and manual play. Entries are listed in the order they were
+found.
 
 ## 1. Game was blank when `index.html` was opened from disk
 
