@@ -122,3 +122,15 @@ over HTTP).
 - **Symptom:** the dice and bin glyphs showed as tofu boxes on systems without an emoji font.
 - **Root cause:** decorative emoji in button labels with no fallback.
 - **Fix:** plain text labels.
+
+## 14. Fast taps on mobile were swallowed — cell highlighted, no shot, no log entry
+
+- **Symptom:** (reported on Chrome for iPhone) occasionally tapping an enemy cell highlighted it but
+  produced no miss/hit marker and no battle-log line; the game then carried on as if nothing happened.
+- **Root cause:** after each player shot the game sets `state.busy` for a 650 ms "enemy's turn" delay
+  and `playerTurn()` silently returned during that window. A quick follow-up tap therefore did
+  nothing, while on touch devices the `:hover` rule still latched onto the tapped cell (sticky hover),
+  making it look like the tap had registered.
+- **Fix:** a shot taken during the delay now resolves the pending AI turn immediately and then fires,
+  so no input is dropped; the enemy-cell hover highlight only applies on `(hover: hover)` devices and
+  the cells suppress the iOS tap highlight.
