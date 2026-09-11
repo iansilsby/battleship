@@ -1,6 +1,6 @@
 # battleship
 
-Browser Battleship against a hunt-and-target AI opponent. Vanilla HTML, CSS and JavaScript — no
+Hot Wheels–themed browser Battleship against a hunt-and-target AI opponent: park your cars in the garage and wreck the rival's track. Vanilla HTML, CSS and JavaScript — no
 frameworks, no build step, no backend.
 
 **Play it live: https://iansilsby.github.io/battleship/**
@@ -13,15 +13,16 @@ python3 -m http.server 8000   # or: npm start
 
 ## How to play
 
-1. Pick a ship, click a cell on **Your waters** to place it — press `R` or the rotate button to
-   switch between horizontal and vertical, or hit **Randomize** to place the whole fleet.
-   Ships may not overlap or hang off the board; an invalid preview shows in red.
-2. **Start battle**, then click **Enemy waters** to fire. Shots alternate: you, then the AI.
-3. Hits, misses and sunk ships are shown on both boards, each sunk ship is announced by name in the
+1. Pick a car, click a cell in **Your garage** to park it — press `R` or the rotate button to
+   switch between horizontal and vertical, or hit **Randomize** to park the whole garage.
+   Cars may not overlap or hang off the board; an invalid preview shows in red.
+2. **Start the race**, then click the **Rival track** to launch. Shots alternate: you, then the AI.
+3. Hits, misses and wrecked cars are shown on both boards, each wrecked car is announced by name in the
    log, and the shot counters under each board track how many shots each side has fired.
-   **New Game** resets everything.
+   **New Race** resets everything.
 
-Fleet: Carrier 5, Battleship 4, Cruiser 3, Submarine 3, Destroyer 2 on a 10×10 grid.
+Garage: Car Hauler 5, Monster Truck 4, Muscle Car 3, Dragster 3, Go-Kart 2 on a 10×10 grid
+(the classic Carrier/Battleship/Cruiser/Submarine/Destroyer sizes).
 
 ## AI opponent
 

@@ -86,9 +86,9 @@
   }
 
   function fleetSummary(board) {
-    if (board.ships.length === 0) return 'No ships placed yet';
+    if (board.ships.length === 0) return 'No cars in the garage yet';
     const alive = remainingShips(board);
-    if (alive.length === 0) return 'Fleet destroyed';
+    if (alive.length === 0) return 'Garage wiped out';
     return alive.map((ship) => `${ship.name} (${ship.size - ship.hits}/${ship.size})`).join(' · ');
   }
 
@@ -175,30 +175,30 @@
     state.placed.push(index);
     const next = nextUnplacedShip();
     state.selectedShip = next;
-    setStatus(next === -1 ? 'Fleet ready. Start the battle!' : `Place your ${SHIPS[next].name}.`);
+    setStatus(next === -1 ? 'Garage full. Start the race!' : `Park your ${SHIPS[next].name}.`);
     render();
   }
 
   function playerTurn(row, col) {
     if (state.phase !== 'battle' || state.busy) return;
     if (alreadyShot(state.enemy, row, col)) {
-      setStatus('You already fired there — pick another cell.');
+      setStatus('You already crashed into that spot — pick another cell.');
       return;
     }
     const result = fireAt(state.enemy, row, col);
     state.playerShots += 1;
     const label = cellLabel(row, col);
-    if (result.sunk) log(`You sank the enemy ${result.sunk.name} at ${label}!`);
-    else log(`You fired at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
+    if (result.sunk) log(`You wrecked the rival ${result.sunk.name} at ${label}!`);
+    else log(`You launched at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
     render();
 
     if (isFleetDestroyed(state.enemy)) {
-      endGame(`You win! Enemy fleet destroyed in ${state.playerShots} shots.`);
+      endGame(`Checkered flag! Rival garage wrecked in ${state.playerShots} launches.`);
       return;
     }
 
     state.busy = true;
-    setStatus('Enemy is taking aim…');
+    setStatus('Rival is revving up…');
     state.aiTimer = setTimeout(aiTurn, 550);
   }
 
@@ -210,16 +210,16 @@
     state.opponent.recordResult(row, col, result);
     state.enemyShots += 1;
     const label = cellLabel(row, col);
-    if (result.sunk) log(`Enemy sank your ${result.sunk.name} at ${label}!`);
-    else log(`Enemy fired at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
+    if (result.sunk) log(`Rival wrecked your ${result.sunk.name} at ${label}!`);
+    else log(`Rival launched at ${label}: ${result.hit ? 'hit' : 'miss'}.`);
     render();
 
     if (isFleetDestroyed(state.player)) {
-      endGame(`You lose — your fleet was destroyed in ${state.enemyShots} enemy shots.`);
+      endGame(`Wipeout — your garage was wrecked in ${state.enemyShots} rival launches.`);
       return;
     }
     state.busy = false;
-    setStatus('Your turn — fire at enemy waters.');
+    setStatus('Your turn — launch at the rival track.');
   }
 
   function endGame(message) {
@@ -235,8 +235,8 @@
     state.phase = 'battle';
     state.opponent = ai.createAI();
     placeFleetRandomly(state.enemy);
-    setStatus('Your turn — fire at enemy waters.');
-    log('Battle started.');
+    setStatus('Your turn — launch at the rival track.');
+    log('Green light — race on!');
     render();
   }
 
@@ -268,7 +268,7 @@
     state.hovered = null;
     logEl.replaceChildren();
     rotateBtn.textContent = 'Rotate: Horizontal';
-    setStatus('Place your fleet to begin.');
+    setStatus('Park your cars to begin.');
     render();
   }
 
