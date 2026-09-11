@@ -1,81 +1,78 @@
-# battleship
+# Battleship: Autobots vs Decepticons
 
-Transformers-themed browser Battleship — **Autobots vs Decepticons** — against an AI opponent with
-four difficulty levels. Vanilla HTML, CSS and JavaScript: no frameworks, no build step, no backend.
+Transformers-themed browser Battleship against a hunt-and-target AI with four difficulty levels, in vanilla HTML, CSS and JavaScript.
 
-**Play it live: https://iansilsby.github.io/battleship/**
+## Play live
 
-You can also just open `index.html` directly from disk (`file://`), or serve the repo root:
+**https://iansilsby.github.io/battleship/**
+
+## Features
+
+- Landing page, side selection (Autobots or Decepticons) and a UI that recolours to your faction; the AI takes the other side.
+- Manual deployment with hover preview and `R` / button rotation, plus Random and Clear placement.
+- Four AI difficulty levels, from purely random to a probability-density hunter.
+- Units are drawn as hand-made SVG vehicle illustrations on the grid; destroyed enemy vehicles are revealed as they fall and everything is revealed at game over.
+- Scoreboard with shots / hits / destroyed for both sides, a bulleted battle log, in-game "How to play" panel, New battle and Switch side.
+- No frameworks, no build step, no backend, no npm dependencies. Works from `file://`.
+
+## Fleets
+
+Both factions map onto the standard five ship sizes on a 10×10 grid.
+
+| Cells | Autobot | Vehicle | Decepticon | Vehicle |
+| --- | --- | --- | --- | --- |
+| 5 | Optimus Prime | Semi truck | Megatron | Fusion tank |
+| 4 | Ironhide | Armoured pickup | Starscream | Fighter jet |
+| 3 | Ratchet | Rescue truck | Blackout | Attack helicopter |
+| 3 | Jazz | Sports car | Barricade | Police cruiser |
+| 2 | Bumblebee | Compact car | Frenzy | Scout buggy |
+
+## AI difficulty levels
+
+- **Easy** — fires at uniformly random untried cells and never follows up on a hit.
+- **Medium** — hunts randomly, then targets the cells adjacent to any unresolved hit.
+- **Hard** — hunts on a checkerboard parity, targets adjacent cells after a hit, and once two collinear hits exist follows the line from both ends.
+- **Expert** — like Hard, but hunts by picking the cell where the most remaining ship placements can still fit (a probability-density map) instead of plain parity.
+
+At every level the AI only ever chooses cells it has not fired at.
+
+## File structure
+
+```
+battleship/
+├── index.html          # Screens and markup; loads the scripts in dependency order
+├── styles.css          # Layout, faction theming, board and marker styling
+├── package.json        # npm start / npm test scripts (no dependencies)
+├── src/
+│   ├── game.js         # Board, ship placement, shot resolution, win detection (no DOM)
+│   ├── ai.js           # Difficulty-aware hunt-and-target opponent (no DOM)
+│   ├── factions.js     # Autobot / Decepticon units, vehicles, mottos, image paths (no DOM)
+│   └── main.js         # Screens, rendering, input, turn flow
+├── img/                # SVG vehicle illustrations and faction emblems
+├── test/
+│   └── game.test.js    # Node test suite
+├── BUGS.md             # Bug log, in the order found
+└── README.md
+```
+
+`src/game.js`, `src/ai.js` and `src/factions.js` are classic scripts with a UMD-style wrapper: they export via `module.exports` under Node and attach to `window` in the browser, so the same files are unit tested and run directly from disk.
+
+## Run locally
+
+Open `index.html` in a browser. There is no build step. Optionally serve the repo root instead:
 
 ```bash
 python3 -m http.server 8000   # or: npm start
 ```
 
-## How to play
+## Run the tests
 
-1. **Enter the war** from the landing page and **choose your side** — Autobots or Decepticons. The
-   whole UI recolours to your faction and the AI takes the other one.
-2. **Deploy your forces.** Pick a difficulty (Easy / Medium / Hard / Expert), open *How to play* if
-   you need a refresher, then select a unit from your rack and click a cell on your grid to deploy it.
-   Press `R` or the rotate button to switch orientation, or use **Random**. Units may not overlap or
-   leave the board; an invalid preview shows in red. Deployed units are drawn as their vehicle form
-   on the grid.
-3. **Begin the battle**, then click the enemy grid to fire. Shots alternate: you, then the AI.
-   Hits, misses and destroyed units are shown on both grids, every destroyed unit is announced by
-   name in the bulleted battle log, and the scoreboard tracks shots / hits / destroyed for each side.
-   Destroyed enemy vehicles are revealed on the enemy grid; everything is revealed at game over.
-   **New battle** resets the boards, **Switch side** goes back to faction selection.
-
-| Size | Autobot (vehicle) | Decepticon (vehicle) |
-| --- | --- | --- |
-| 5 | Optimus Prime — semi truck | Megatron — fusion tank |
-| 4 | Ironhide — armoured pickup | Starscream — fighter jet |
-| 3 | Ratchet — rescue truck | Blackout — attack helicopter |
-| 3 | Jazz — sports car | Barricade — police cruiser |
-| 2 | Bumblebee — compact car | Frenzy — scout buggy |
-
-Standard 10×10 grid with the classic Carrier/Battleship/Cruiser/Submarine/Destroyer sizes.
-
-## AI opponent
-
-`src/ai.js` implements hunt-and-target with a difficulty dial:
-
-| Level | Behaviour | ~shots to win |
-| --- | --- | --- |
-| Easy | Uniformly random shots; ignores hits | 95 |
-| Medium | Random hunt; after a hit, fires at adjacent cells | 57 |
-| Hard | Checkerboard-parity hunt → adjacent target → follow the line of hits from both ends | 51 |
-| Expert | Hard, plus hunting picks the parity cell where the most remaining ship placements fit | 46 |
-
-(Averages over 50 self-played games.) At every level the AI only ever chooses untried cells.
-
-## Layout
-
-| File | Role |
-| --- | --- |
-| `src/game.js` | Board, ship placement, shot resolution, win detection — no DOM |
-| `src/ai.js` | Difficulty-aware hunt-and-target opponent — no DOM |
-| `src/factions.js` | Autobot / Decepticon unit names, vehicles, mottos and image paths — no DOM |
-| `src/main.js` | Screens, rendering, input, turn flow |
-| `img/*.svg` | Hand-drawn vehicle illustrations and faction emblems |
-| `test/game.test.js` | Node test suite |
-
-The logic modules are plain scripts that export via `module.exports` under Node and attach to
-`window` in the browser, so the same files are unit tested and run from `file://` (ES modules are
-blocked by CORS when opened directly from disk).
-
-## Tests
-
-Plain Node, no dependencies to install (Node 18+):
+Node 18+ with the built-in test runner; nothing to install:
 
 ```bash
-node --test "test/*.test.js"   # or: npm test
+npm test
 ```
 
-Covers placement validation, hit/miss/sunk resolution, win detection, the AI's hunt → target → line
-progression, every difficulty finishing games without repeating a shot, the Expert density search,
-and that both factions map onto the standard five sizes with existing image files.
+## Built with Devin
 
-## Bugs
-
-Bugs found while building and play-testing this are logged in [BUGS.md](BUGS.md).
+This game was built, tested and debugged entirely through [Devin](https://devin.ai) sessions: the original game, the AI, the themed reskins, the test suite and the fixes logged in [BUGS.md](BUGS.md) all came from Devin's own test games, unit tests and manual play.
