@@ -500,8 +500,15 @@ kbd {
   cursor: crosshair;
 }
 
-.board--enemy .cell:not(.cell--hit):not(.cell--miss):not(.cell--sunk):hover {
-  background: var(--enemy-hover);
+@media (hover: hover) {
+  .board--enemy .cell:not(.cell--hit):not(.cell--miss):not(.cell--sunk):hover {
+    background: var(--enemy-hover);
+  }
+}
+
+.cell {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .cell--preview {

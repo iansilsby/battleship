@@ -336,7 +336,13 @@
   }
 
   function playerTurn(row, col) {
-    if (state.phase !== 'battle' || state.busy) return;
+    if (state.phase !== 'battle') return;
+    if (state.busy) {
+      if (state.aiTimer === null) return;
+      clearTimeout(state.aiTimer);
+      aiTurn();
+      if (state.phase !== 'battle') return;
+    }
     if (alreadyShot(state.enemy, row, col)) {
       setTurn('You already fired there — pick another cell.');
       return;
