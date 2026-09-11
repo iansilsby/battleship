@@ -246,7 +246,7 @@
     placeFleetRandomly(state.player);
     state.placed = SHIPS.map((_, index) => index);
     state.selectedShip = -1;
-    setStatus('Fleet ready. Start the battle!');
+    setStatus('Garage full. Start the race!');
     render();
   }
 

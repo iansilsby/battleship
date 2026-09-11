@@ -165,11 +165,11 @@ main {
   cursor: default;
 }
 
-.board--enemy .cell:not(.cell--hit):not(.cell--miss) {
+.board--enemy .cell:not(.cell--hit):not(.cell--miss):not(.cell--sunk) {
   cursor: crosshair;
 }
 
-.board--enemy .cell:not(.cell--hit):not(.cell--miss):hover {
+.board--enemy .cell:not(.cell--hit):not(.cell--miss):not(.cell--sunk):hover {
   background: var(--sea-light);
 }
 
