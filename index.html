@@ -3,55 +3,168 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Battleship</title>
+    <title>Transformers Battleship — Autobots vs Decepticons</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <header>
-      <h1>Battleship</h1>
-      <p id="status" class="status">Place your fleet to begin.</p>
-    </header>
+  <body class="faction-autobots">
+    <!-- Landing -->
+    <section class="screen screen--splash" id="screen-splash">
+      <div class="splash">
+        <p class="eyebrow">Transformers</p>
+        <h1 class="title">Battleship</h1>
+        <p class="subtitle">Autobots <span class="vs">vs</span> Decepticons</p>
+        <p class="quote">“One shall stand, one shall fall.”</p>
+        <button id="enter-btn" type="button" class="btn btn--primary btn--big">Enter the war</button>
+      </div>
+    </section>
 
-    <main>
-      <section class="panel" id="setup-panel">
-        <h2>Deploy your fleet</h2>
-        <p class="hint">
-          Pick a ship, then click a cell on your waters to place it. Press <kbd>R</kbd> or the
-          rotate button to change orientation.
-        </p>
-        <ul id="ship-list" class="ship-list"></ul>
-        <div class="controls">
-          <button id="rotate-btn" type="button">Rotate: Horizontal</button>
-          <button id="random-btn" type="button">Randomize</button>
-          <button id="start-btn" type="button" disabled>Start battle</button>
+    <!-- Faction select -->
+    <section class="screen" id="screen-faction" hidden>
+      <div class="centered">
+        <h2 class="screen-title">Choose your side</h2>
+        <p class="muted">Who will lead the assault on Cybertron?</p>
+        <div class="faction-grid">
+          <button type="button" class="faction-card faction-card--autobots" data-faction="autobots">
+            <span class="emblem emblem--autobots" aria-hidden="true"></span>
+            <span class="faction-card__name">Autobots</span>
+            <span class="faction-card__blurb">Command Optimus Prime’s convoy</span>
+          </button>
+          <button type="button" class="faction-card faction-card--decepticons" data-faction="decepticons">
+            <span class="emblem emblem--decepticons" aria-hidden="true"></span>
+            <span class="faction-card__name">Decepticons</span>
+            <span class="faction-card__blurb">Command Megatron’s strike force</span>
+          </button>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="boards">
-        <div class="board-wrap">
-          <h2>Your waters</h2>
-          <div id="player-board" class="board" aria-label="Your board"></div>
-          <p class="fleet-status" id="player-fleet"></p>
-          <p class="counter">Enemy shots fired: <span id="enemy-shots">0</span></p>
-        </div>
-        <div class="board-wrap">
-          <h2>Enemy waters</h2>
-          <div id="enemy-board" class="board board--enemy" aria-label="Enemy board"></div>
-          <p class="fleet-status" id="enemy-fleet"></p>
-          <p class="counter">Your shots fired: <span id="player-shots">0</span></p>
-        </div>
-      </section>
+    <!-- Setup -->
+    <section class="screen" id="screen-setup" hidden>
+      <div class="centered wide">
+        <h2 class="screen-title"><span id="setup-title">Autobots</span> — deploy your forces</h2>
+        <p id="status" class="status">Position your units, Commander.</p>
 
-      <section class="panel">
-        <div class="controls">
-          <button id="restart-btn" type="button">New Game</button>
+        <details class="howto">
+          <summary>Never played? How to play</summary>
+          <div class="howto__body">
+            <div>
+              <h3>1. Setup</h3>
+              <ul>
+                <li>Pick a difficulty (Easy, Medium, Hard or Expert).</li>
+                <li>Select a unit, then click a cell on your grid to deploy it.</li>
+                <li>Press <kbd>R</kbd> or the rotate button to switch orientation, or use Random.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>2. Your units</h3>
+              <ul id="howto-units"></ul>
+            </div>
+            <div>
+              <h3>3. Battle</h3>
+              <ul>
+                <li>Click a cell on the enemy grid to fire. Shots alternate: you, then the enemy.</li>
+                <li>Hits, misses and destroyed units are shown on both grids.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>4. Victory</h3>
+              <ul>
+                <li>Destroy all five enemy units before they destroy yours.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <div class="difficulty" role="group" aria-label="Difficulty">
+          <span class="difficulty__label">Difficulty:</span>
+          <button type="button" class="chip" data-difficulty="easy">Easy</button>
+          <button type="button" class="chip" data-difficulty="medium">Medium</button>
+          <button type="button" class="chip" data-difficulty="hard">Hard</button>
+          <button type="button" class="chip" data-difficulty="expert">Expert</button>
         </div>
-        <ol id="log" class="log" aria-live="polite"></ol>
-      </section>
-    </main>
+
+        <div class="setup-layout">
+          <aside class="rack panel">
+            <h3 id="rack-title">Autobot convoy</h3>
+            <ul id="ship-list" class="ship-list"></ul>
+            <div class="controls">
+              <button id="rotate-btn" type="button" class="btn">↔ Horizontal</button>
+              <button id="random-btn" type="button" class="btn">Random</button>
+              <button id="clear-btn" type="button" class="btn">Clear</button>
+            </div>
+          </aside>
+          <div class="board-wrap">
+            <h3 id="setup-board-title">Autobot territory</h3>
+            <div id="player-board" class="board" aria-label="Your board"></div>
+          </div>
+        </div>
+
+        <div class="controls controls--center">
+          <button id="start-btn" type="button" class="btn btn--primary btn--big" disabled>
+            Begin the battle
+          </button>
+          <button id="back-btn" type="button" class="btn">← Switch side</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Battle -->
+    <section class="screen" id="screen-battle" hidden>
+      <div class="centered wide">
+        <h2 class="screen-title">Autobots <span class="vs">vs</span> Decepticons</h2>
+        <p id="turn" class="status">Your turn</p>
+
+        <div class="scoreboard">
+          <div class="score panel" id="player-score">
+            <h3 id="player-score-title">Autobots</h3>
+            <dl>
+              <div><dt>Shots</dt><dd id="player-shots">0</dd></div>
+              <div><dt>Hits</dt><dd id="player-hits">0</dd></div>
+              <div><dt>Destroyed</dt><dd id="player-sunk">0</dd></div>
+            </dl>
+          </div>
+          <div class="score__mid">
+            <span class="vs">vs</span>
+            <span class="chip chip--static" id="difficulty-display">Hard</span>
+          </div>
+          <div class="score panel" id="enemy-score">
+            <h3 id="enemy-score-title">Decepticons</h3>
+            <dl>
+              <div><dt>Shots</dt><dd id="enemy-shots">0</dd></div>
+              <div><dt>Hits</dt><dd id="enemy-hits">0</dd></div>
+              <div><dt>Destroyed</dt><dd id="enemy-sunk">0</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="boards">
+          <div class="board-wrap">
+            <h3 id="player-board-title">Autobot territory</h3>
+            <div id="player-board-battle" class="board" aria-label="Your board"></div>
+            <p class="fleet-status" id="player-fleet"></p>
+          </div>
+          <div class="board-wrap">
+            <h3 id="enemy-board-title">Decepticon territory</h3>
+            <div id="enemy-board" class="board board--enemy" aria-label="Enemy board"></div>
+            <p class="fleet-status" id="enemy-fleet"></p>
+          </div>
+        </div>
+
+        <section class="panel log-panel">
+          <h3>Battle log</h3>
+          <ul id="log" class="log" aria-live="polite"></ul>
+        </section>
+
+        <div class="controls controls--center">
+          <button id="switch-btn" type="button" class="btn">Switch side</button>
+          <button id="restart-btn" type="button" class="btn btn--primary">New battle</button>
+        </div>
+      </div>
+    </section>
 
     <script src="src/game.js"></script>
     <script src="src/ai.js"></script>
+    <script src="src/factions.js"></script>
     <script src="src/main.js"></script>
   </body>
 </html>

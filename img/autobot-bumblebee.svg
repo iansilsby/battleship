@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 32" width="64" height="32">
+  <!-- Bumblebee: yellow compact car with black stripes -->
+  <path d="M4 22v-6l8-4 6-6h22l10 6 8 4v6z" fill="#ffc400"/>
+  <path d="M20 8h18l7 5H14z" fill="#2c3e57"/>
+  <rect x="26" y="6" width="4" height="16" fill="#1b1e24"/>
+  <rect x="33" y="6" width="4" height="16" fill="#1b1e24"/>
+  <rect x="54" y="16" width="6" height="3" fill="#fff5c2"/>
+  <g fill="#0d0f13" stroke="#8f97a3" stroke-width="2">
+    <circle cx="16" cy="24" r="5"/><circle cx="48" cy="24" r="5"/>
+  </g>
+</svg>

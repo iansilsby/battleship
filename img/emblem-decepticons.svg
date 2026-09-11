@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Stylised angular robot face, purple -->
+  <path d="M50 4 8 20l10 24-4 14 18 8 18 26 18-26 18-8-4-14 10-24z" fill="#6f2dbd"/>
+  <path d="M50 14 18 26l8 18-3 10 14 6 13 20 13-20 14-6-3-10 8-18z" fill="#0b0d14"/>
+  <path d="M28 34l22-8 22 8-6 10H34z" fill="#6f2dbd"/>
+  <path d="M30 48l14-4 2 8-12 2zM70 48l-14-4-2 8 12 2z" fill="#d52bff"/>
+  <path d="M40 62h20l-10 10z" fill="#6f2dbd"/>
+</svg>

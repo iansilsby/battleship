@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32" width="96" height="32">
+  <!-- Jazz: silver sports car with racing stripe -->
+  <path d="M4 22c0-4 4-8 12-8h14l14-8h24l16 8 8 2v6z" fill="#dfe4ea"/>
+  <path d="M46 8h20l10 6H36z" fill="#2c3e57"/>
+  <path d="M10 14h72" stroke="#2a4ea8" stroke-width="3"/>
+  <rect x="86" y="16" width="6" height="3" fill="#ffd400"/>
+  <rect x="2" y="17" width="6" height="3" fill="#c8102e"/>
+  <g fill="#0d0f13" stroke="#8f97a3" stroke-width="2">
+    <circle cx="22" cy="24" r="5"/><circle cx="74" cy="24" r="5"/>
+  </g>
+</svg>

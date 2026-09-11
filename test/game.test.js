@@ -157,3 +157,91 @@ test('lineEnds extends both directions for either orientation', () => {
     { row: 6, col: 1 },
   ]);
 });
+
+const { DIFFICULTIES } = require('../src/ai.js');
+const { FACTIONS, opposing, unitFor } = require('../src/factions.js');
+
+test('every difficulty level finishes a game without repeating a shot', () => {
+  DIFFICULTIES.forEach((difficulty) => {
+    for (let round = 0; round < 10; round += 1) {
+      const board = createBoard();
+      placeFleetRandomly(board);
+      const opponent = createAI({ difficulty });
+      assert.equal(opponent.difficulty, difficulty);
+      const seen = new Set();
+      let shots = 0;
+      while (!isFleetDestroyed(board)) {
+        const { row, col } = opponent.nextShot(board.shots);
+        assert.ok(!seen.has(`${row},${col}`), `${difficulty} repeated ${row},${col}`);
+        seen.add(`${row},${col}`);
+        const result = fireAt(board, row, col);
+        assert.ok(result, `${difficulty} fired at an already-shot cell`);
+        opponent.recordResult(row, col, result);
+        shots += 1;
+      }
+      assert.ok(shots <= BOARD_SIZE * BOARD_SIZE);
+    }
+  });
+});
+
+test('unknown difficulty falls back to hard', () => {
+  assert.equal(createAI({ difficulty: 'nightmare' }).difficulty, 'hard');
+  assert.equal(createAI().difficulty, 'hard');
+});
+
+test('easy AI ignores hits and keeps shooting randomly', () => {
+  const board = createBoard();
+  placeShip(board, 'Cruiser', 4, 2, 3, true);
+  const opponent = createAI({ difficulty: 'easy', random: () => 0 });
+  opponent.recordResult(4, 3, fireAt(board, 4, 3));
+  const next = opponent.nextShot(board.shots);
+  assert.deepEqual(next, { row: 0, col: 0 }, 'easy picks the first open cell, not a neighbour');
+});
+
+test('medium AI targets neighbours but never follows the line', () => {
+  const board = createBoard();
+  placeShip(board, 'Carrier', 5, 2, 5, true);
+  const opponent = createAI({ difficulty: 'medium' });
+  opponent.recordResult(5, 3, fireAt(board, 5, 3));
+  opponent.recordResult(5, 4, fireAt(board, 5, 4));
+  const candidates = new Set();
+  for (let i = 0; i < 200; i += 1) {
+    const { row, col } = opponent.nextShot(board.shots);
+    candidates.add(`${row},${col}`);
+  }
+  assert.ok(candidates.has('4,3') || candidates.has('6,3') || candidates.has('4,4') || candidates.has('6,4'));
+  assert.ok(candidates.size > 2, 'medium spreads over all neighbours instead of only the line ends');
+});
+
+test('expert AI prefers the cells where the most remaining ships fit', () => {
+  const shots = createBoard().shots;
+  const { densestCells } = require('../src/ai.js');
+  const dense = densestCells(shots, [5, 4, 3, 3, 2], new Set());
+  const corner = dense.find((cell) => cell.row === 0 && cell.col === 0);
+  assert.equal(corner, undefined, 'corners are the least likely cells on an empty board');
+  assert.ok(dense.every((cell) => cell.row >= 2 && cell.row <= 7 && cell.col >= 2 && cell.col <= 7));
+});
+
+test('both factions field the standard five unit sizes with unique images', () => {
+  Object.values(FACTIONS).forEach((faction) => {
+    assert.deepEqual(
+      faction.fleet.map((unit) => unit.size),
+      SHIPS.map((ship) => ship.size),
+    );
+    const images = new Set(faction.fleet.map((unit) => unit.image));
+    assert.equal(images.size, faction.fleet.length);
+    faction.fleet.forEach((unit) => assert.equal(unitFor(faction, unit.name), unit));
+  });
+  assert.equal(opposing('autobots'), FACTIONS.decepticons);
+  assert.equal(opposing('decepticons'), FACTIONS.autobots);
+});
+
+test('vehicle images referenced by the factions exist on disk', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  Object.values(FACTIONS).forEach((faction) => {
+    faction.fleet.forEach((unit) => {
+      assert.ok(fs.existsSync(path.join(__dirname, '..', unit.image)), `${unit.image} missing`);
+    });
+  });
+});

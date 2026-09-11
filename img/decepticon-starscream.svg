@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 32" width="128" height="32">
+  <!-- Starscream: grey fighter jet, nose right -->
+  <path d="M4 16l18-4h54l48 4-48 4H22z" fill="#9aa0ad"/>
+  <path d="M40 12l12-9h10l-8 9zM40 20l12 9h10l-8-9z" fill="#c8102e"/>
+  <path d="M8 12l10-9h6l-6 9zM8 20l10 9h6l-6-9z" fill="#5a2d82"/>
+  <path d="M84 12h14l8 4-8 4H84z" fill="#3a3f4a"/>
+  <rect x="98" y="14" width="26" height="4" fill="#d9dce3"/>
+  <rect x="2" y="14" width="8" height="4" fill="#ff7a00"/>
+  <path d="M60 16h30" stroke="#5a2d82" stroke-width="1.5"/>
+</svg>
